@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英文學習遊戲 - Learn English</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-light: #818CF8;
+            --success: #10B981;
+            --error: #EF4444;
+            --warning: #F59E0B;
+            --bg: #F3F4F6;
+            --card: #FFFFFF;
+            --text: #1F2937;
+            --text-light: #6B7280;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(79, 70, 229, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 0 rgba(79, 70, 229, 0.2);
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            background: var(--card);
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+
+        .stat.correct { color: var(--success); }
+        .stat.wrong { color: var(--error); }
+
+        .mode-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .mode-btn.listen { background: #EDE9FE; color: #7C3AED; }
+        .mode-btn.read { background: #DBEAFE; color: #2563EB; }
+        .mode-btn.write { background: #D1FAE5; color: #059669; }
+
+        .mode-btn:hover { transform: translateY(-2px); }
+        .mode-btn.active { 
+            transform: scale(1.05); 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+
+        .mode-btn.active.listen { background: #7C3AED; color: white; }
+        .mode-btn.active.read { background: #2563EB; color: white; }
+        .mode-btn.active.write { background: #059669; color: white; }
+
+        .game-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .question-area {
+            text-align: center;
+            margin-bottom: 32px;
+            width: 100%;
+        }
+
+        .question-number {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .speak-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+            margin-bottom: 24px;
+        }
+
+        .speak-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .speak-btn.speaking {
+            animation: pulse 0.8s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .question-text {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .hint-text {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .option {
+            padding: 16px 20px;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            background: white;
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option:hover {
+            border-color: var(--primary);
+            background: #F5F3FF;
+        }
+
+        .option.correct {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+            animation: correctPop 0.5s ease;
+        }
+
+        .option.wrong {
+            background: var(--error);
+            border-color: var(--error);
+            color: white;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes correctPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .input-area {
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .answer-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 3px solid #E5E7EB;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .answer-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .answer-input.correct {
+            border-color: var(--success);
+            background: #D1FAE5;
+        }
+
+        .answer-input.wrong {
+            border-color: var(--error);
+            background: #FEE2E2;
+        }
+
+        .submit-btn {
+            margin-top: 16px;
+            padding: 14px 40px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .submit-btn:hover {
+            background: #4338CA;
+            transform: translateY(-2px);
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .feedback.correct {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .feedback.wrong {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .feedback .correct-answer {
+            margin-top: 8px;
+            font-size: 1.3rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .next-btn {
+            margin-top: 20px;
+            padding: 12px 32px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: none;
+        }
+
+        .next-btn.show {
+            display: inline-block;
+        }
+
+        .start-screen {
+            text-align: center;
+        }
+
+        .start-screen h2 {
+            font-size: 1.5rem;
+            color: var(--text);
+            margin-bottom: 16px;
+        }
+
+        .start-screen p {
+            color: var(--text-light);
+            margin-bottom: 24px;
+        }
+
+        .start-btn {
+            padding: 16px 48px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 英文學習遊戲</h1>
+            <div class="stats-bar">
+                <div class="stat correct">✓ 正確: <span id="correct-count">0</span></div>
+                <div class="stat wrong">✗ 錯誤: <span id="wrong-count">0</span></div>
+                <div class="stat">📊 得分: <span id="score">0</span></div>
+            </div>
+        </header>
+
+        <div class="mode-selector">
+            <button class="mode-btn listen" data-mode="listen">
+                <span>👂</span> 聽力
+            </button>
+            <button class="mode-btn read" data-mode="read">
+                <span>👀</span> 閱讀
+            </button>
+            <button class="mode-btn write" data-mode="write">
+                <span>✏️</span> 寫作
+            </button>
+        </div>
+
+        <div class="game-card">
+            <div id="start-screen" class="start-screen">
+                <h2>歡迎來到英文學習遊戲！</h2>
+                <p>選擇上面的模式開始學習：<br>👂 聽力 - 聽單字選翻譯<br>👀 閱讀 - 看英文選正解<br>✏️ 寫作 - 根據提示寫單字</p>
+                <button class="start-btn" onclick="startGame('listen')">開始遊戲</button>
+            </div>
+
+            <div id="game-area" class="hidden">
+                <div class="question-area">
+                    <div class="question-number">第 <span id="q-num">1</span> 題</div>
+                    
+                    <div id="listen-area" class="hidden">
+                        <button class="speak-btn" onclick="speakWord()">🔊</button>
+                        <p class="hint-text">請選擇正確的中文翻譯</p>
+                    </div>
+
+                    <div id="read-area" class="hidden">
+                        <p class="question-text" id="question-text"></p>
+                        <p class="hint-text">請選擇正確的中文翻譯</p>
+                    </div>
+
+                    <div id="write-area" class="hidden">
+                        <p class="hint-text" id="write-hint"></p>
+                    </div>
+                </div>
+
+                <div id="options-area" class="options hidden"></div>
+
+                <div id="input-area" class="input-area hidden">
+                    <input type="text" class="answer-input" id="answer-input" placeholder="輸入英文單字..." autocomplete="off">
+                    <button class="submit-btn" onclick="submitAnswer()">確認答案</button>
+                </div>
+
+                <div id="feedback" class="feedback"></div>
+                <button id="next-btn" class="next-btn" onclick="nextQuestion()">下一題 ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const words = [
+            { en: 'dog', zh: '狗' },
+            { en: 'cat', zh: '貓' },
+            { en: 'bird', zh: '鳥' },
+            { en: 'fish', zh: '魚' },
+            { en: 'apple', zh: '蘋果' },
+            { en: 'banana', zh: '香蕉' },
+            { en: 'rice', zh: '米飯' },
+            { en: 'bread', zh: '麵包' },
+            { en: 'red', zh: '紅色' },
+            { en: 'blue', zh: '藍色' },
+            { en: 'green', zh: '綠色' },
+            { en: 'yellow', zh: '黃色' },
+            { en: 'one', zh: '一' },
+            { en: 'two', zh: '二' },
+            { en: 'three', zh: '三' },
+            { en: 'four', zh: '四' },
+            { en: 'five', zh: '五' },
+            { en: 'run', zh: '跑' },
+            { en: 'eat', zh: '吃' },
+            { en: 'sleep', zh: '睡覺' },
+            { en: 'drink', zh: '喝' }
+        ];
+
+        let currentMode = '';
+        let currentWord = null;
+        let usedWords = [];
+        let correctCount = 0;
+        let wrongCount = 0;
+        let score = 0;
+        let canAnswer = true;
+
+        const synth = window.speechSynthesis;
+
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const mode = btn.dataset.mode;
+                startGame(mode);
+            });
+        });
+
+        document.getElementById('answer-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                submitAnswer();
+            }
+        });
+
+        function startGame(mode) {
+            currentMode = mode;
+            usedWords = [];
+            
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-area').classList.remove('hidden');
+
+            document.getElementById('listen-area').classList.add('hidden');
+            document.getElementById('read-area').classList.add('hidden');
+            document.getElementById('write-area').classList.add('hidden');
+            document.getElementById('options-area').classList.add('hidden');
+            document.getElementById('input-area').classList.add('hidden');
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('next-btn').classList.remove('show');
+
+            if (mode === 'listen') {
+                document.getElementById('listen-area').classList.remove('hidden');
+                document.getElementById('options-area').classList.remove('hidden');
+            } else if (mode === 'read') {
+                document.getElementById('read-area').classList.remove('hidden');
+                document.getElementById('options-area').classList.remove('hidden');
+            } else if (mode === 'write') {
+                document.getElementById('write-area').classList.remove('hidden');
+                document.getElementById('input-area').classList.remove('hidden');
+            }
+
+            nextQuestion();
+        }
+
+        function getRandomWord() {
+            const available = words.filter(w => !usedWords.includes(w.en));
+            if (available.length === 0) {
+                usedWords = [];
+                return words[Math.floor(Math.random() * words.length)];
+            }
+            const word = available[Math.floor(Math.random() * available.length)];
+            usedWords.push(word.en);
+            return word;
+        }
+
+        function getRandomOptions(correct) {
+            const others = words.filter(w => w.zh !== correct).map(w => w.zh);
+            const shuffled = others.sort(() => Math.random() - 0.5);
+            const options = [correct, ...shuffled.slice(0, 3)];
+            return options.sort(() => Math.random() - 0.5);
+        }
+
+        function nextQuestion() {
+            canAnswer = true;
+            currentWord = getRandomWord();
+            
+            document.getElementById('q-num').textContent = usedWords.length;
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('next-btn').classList.remove('show');
+            document.getElementById('answer-input').value = '';
+            document.getElementById('answer-input').classList.remove('correct', 'wrong');
+
+            if (currentMode === 'listen') {
+                setTimeout(speakWord, 300);
+                const options = getRandomOptions(currentWord.zh);
+                renderOptions(options);
+            } else if (currentMode === 'read') {
+                document.getElementById('question-text').textContent = currentWord.en;
+                const options = getRandomOptions(currentWord.zh);
+                renderOptions(options);
+            } else if (currentMode === 'write') {
+                document.getElementById('write-hint').textContent = `請寫出「${currentWord.zh}」的英文：`;
+                document.getElementById('answer-input').focus();
+            }
+        }
+
+        function speakWord() {
+            if (!canAnswer) return;
+            
+            const btn = document.querySelector('.speak-btn');
+            btn.classList.add('speaking');
+            
+            const utterance = new SpeechSynthesisUtterance(currentWord.en);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.8;
+            
+            utterance.onend = () => {
+                btn.classList.remove('speaking');
+            };
+            
+            synth.speak(utterance);
+        }
+
+        function renderOptions(options) {
+            const container = document.getElementById('options-area');
+            container.innerHTML = '';
+            
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option';
+                btn.textContent = opt;
+                btn.onclick = () => selectOption(btn, opt);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectOption(btn, selected) {
+            if (!canAnswer) return;
+            canAnswer = false;
+
+            const isCorrect = selected === currentWord.zh;
+            
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.disabled = true;
+                if (opt.textContent === currentWord.zh) {
+                    opt.classList.add('correct');
+                }
+            });
+
+            if (isCorrect) {
+                btn.classList.add('correct');
+                correctCount++;
+                score += 10;
+                showFeedback(true);
+            } else {
+                btn.classList.add('wrong');
+                wrongCount++;
+                showFeedback(false, currentWord.zh);
+            }
+
+            updateStats();
+            document.getElementById('next-btn').classList.add('show');
+        }
+
+        function submitAnswer() {
+            if (!canAnswer) return;
+            
+            const input = document.getElementById('answer-input');
+            const answer = input.value.trim().toLowerCase();
+            
+            if (!answer) return;
+            
+            canAnswer = false;
+            
+            const isCorrect = answer === currentWord.en.toLowerCase();
+            
+            if (isCorrect) {
+                input.classList.add('correct');
+                correctCount++;
+                score += 10;
+                showFeedback(true);
+            } else {
+                input.classList.add('wrong');
+                wrongCount++;
+                showFeedback(false, currentWord.en);
+            }
+
+            updateStats();
+            document.getElementById('next-btn').classList.add('show');
+        }
+
+        function showFeedback(isCorrect, correctAnswer = '') {
+            const feedback = document.getElementById('feedback');
+            feedback.classList.remove('correct', 'wrong');
+            feedback.classList.add('show');
+            
+            if (isCorrect) {
+                feedback.classList.add('correct');
+                feedback.innerHTML = `🎉 正確！太厲害了！`;
+            } else {
+                feedback.classList.add('wrong');
+                feedback.innerHTML = `
+                    ❌ 答錯了！
+                    <div class="correct-answer">正確答案：${correctAnswer}</div>
+                    <div style="margin-top: 8px; font-size: 0.9rem;">記住這個單字了嗎？</div>
+                `;
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('correct-count').textContent = correctCount;
+            document.getElementById('wrong-count').textContent = wrongCount;
+            document.getElementById('score').textContent = score;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英文單字遊戲</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .word-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .word {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .word-phonetic {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            padding: 20px;
+            font-size: 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #333;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .option-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .option-btn.correct {
+            background: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+
+        .option-btn.wrong {
+            background: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            font-size: 18px;
+            margin-bottom: 20px;
+            height: 30px;
+        }
+
+        .message.correct {
+            color: #28a745;
+        }
+
+        .message.wrong {
+            color: #dc3545;
+        }
+
+        .next-btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .next-btn:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        .start-screen, .end-screen {
+            display: none;
+        }
+
+        .start-screen.active, .end-screen.active {
+            display: block;
+        }
+
+        .game-screen {
+            display: none;
+        }
+
+        .game-screen.active {
+            display: block;
+        }
+
+        .start-btn, .restart-btn {
+            padding: 20px 50px;
+            font-size: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .start-btn:hover, .restart-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .final-score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="start-screen active" id="startScreen">
+            <h1>🎯 英文單字遊戲</h1>
+            <p style="color: #666; margin-top: 20px;">測試你的英文單字能力！</p>
+            <p style="color: #999; margin-top: 10px;">共 10 題，答對得 10 分</p>
+            <button class="start-btn" onclick="startGame()">開始遊戲</button>
+        </div>
+
+        <div class="game-screen" id="gameScreen">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="score-board">
+                <div class="score-item">
+                    <div class="score-label">分數</div>
+                    <div class="score-value" id="score">0</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">題目</div>
+                    <div class="score-value" id="questionNum">1/10</div>
+                </div>
+            </div>
+
+            <div class="word-display">
+                <div class="word" id="word">apple</div>
+                <div class="word-phonetic" id="phonetic">/ˈæp.əl/</div>
+            </div>
+
+            <div class="message" id="message"></div>
+
+            <div class="options" id="options"></div>
+
+            <button class="next-btn" id="nextBtn" onclick="nextQuestion()" style="display: none;">下一題</button>
+        </div>
+
+        <div class="end-screen" id="endScreen">
+            <h1>遊戲結束！</h1>
+            <p>你的最終分數</p>
+            <div class="final-score" id="finalScore">0</div>
+            <p id="resultMessage"></p>
+            <button class="restart-btn" onclick="startGame()">再玩一次</button>
+        </div>
+    </div>
+
+    <script>
+        const words = [
+            { word: "apple", phonetic: "/ˈæp.əl/", meaning: "蘋果" },
+            { word: "banana", phonetic: "/bəˈnæn.ə/", meaning: "香蕉" },
+            { word: "orange", phonetic: "/ˈɔː.rɪndʒ/", meaning: "橙子" },
+            { word: "computer", phonetic: "/kəmˈpjuː.tər/", meaning: "電腦" },
+            { word: "book", phonetic: "/bʊk/", meaning: "書" },
+            { word: "school", phonetic: "/skuːl/", meaning: "學校" },
+            { word: "student", phonetic: "/ˈstjuː.dənt/", meaning: "學生" },
+            { word: "teacher", phonetic: "/ˈtiː.tʃər/", meaning: "老師" },
+            { word: "family", phonetic: "/ˈfæm.əl.i/", meaning: "家庭" },
+            { word: "friend", phonetic: "/frend/", meaning: "朋友" },
+            { word: "happy", phonetic: "/ˈhæp.i/", meaning: "快樂的" },
+            { word: "beautiful", phonetic: "/ˈbjuː.tɪ.fəl/", meaning: "美麗的" },
+            { word: "important", phonetic: "/ɪmˈpɔː.tənt/", meaning: "重要的" },
+            { word: "different", phonetic: "/ˈdɪf.ər.ənt/", meaning: "不同的" },
+            { word: "difficult", phonetic: "/ˈdɪf.ɪ.kəlt/", meaning: "困難的" },
+            { word: "water", phonetic: "/ˈwɔː.tər/", meaning: "水" },
+            { word: "food", phonetic: "/fuːd/", meaning: "食物" },
+            { word: "house", phonetic: "/haʊs/", meaning: "房子" },
+            { word: "car", phonetic: "/kɑːr/", meaning: "汽車" },
+            { word: "time", phonetic: "/taɪm/", meaning: "時間" },
+            { word: "money", phonetic: "/ˈmʌn.i/", meaning: "金錢" },
+            { word: "music", phonetic: "/ˈmjuː.zɪk/", meaning: "音樂" },
+            { word: "movie", phonetic: "/ˈmuː.vi/", meaning: "電影" },
+            { word: "game", phonetic: "/ɡeɪm/", meaning: "遊戲" },
+            { word: "love", phonetic: "/lʌv/", meaning: "愛" }
+        ];
+
+        let gameWords = [];
+        let currentQuestion = 0;
+        let score = 0;
+        let totalQuestions = 10;
+        let answered = false;
+
+        function shuffle(array) {
+            let newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function getRandomWrongAnswers(correct, allWords, count) {
+            let wrong = allWords.filter(w => w.meaning !== correct);
+            wrong = shuffle(wrong);
+            return wrong.slice(0, count).map(w => w.meaning);
+        }
+
+        function startGame() {
+            gameWords = shuffle(words).slice(0, totalQuestions);
+            currentQuestion = 0;
+            score = 0;
+            answered = false;
+
+            document.getElementById('startScreen').classList.remove('active');
+            document.getElementById('endScreen').classList.remove('active');
+            document.getElementById('gameScreen').classList.add('active');
+
+            updateScore();
+            showQuestion();
+        }
+
+        function showQuestion() {
+            answered = false;
+            const question = gameWords[currentQuestion];
+
+            document.getElementById('word').textContent = question.word;
+            document.getElementById('phonetic').textContent = question.phonetic;
+            document.getElementById('questionNum').textContent = `${currentQuestion + 1}/${totalQuestions}`;
+            document.getElementById('progressFill').style.width = `${(currentQuestion / totalQuestions) * 100}%`;
+            document.getElementById('message').textContent = '';
+            document.getElementById('message').className = 'message';
+            document.getElementById('nextBtn').style.display = 'none';
+
+            const wrongAnswers = getRandomWrongAnswers(question.meaning, words, 3);
+            const options = shuffle([question.meaning, ...wrongAnswers]);
+
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+
+            options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = option;
+                btn.onclick = () => checkAnswer(option, question.meaning, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected, correct, btn) {
+            if (answered) return;
+            answered = true;
+
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.disabled = true);
+
+            if (selected === correct) {
+                btn.classList.add('correct');
+                score += 10;
+                document.getElementById('message').textContent = '✓ 答對了！';
+                document.getElementById('message').className = 'message correct';
+            } else {
+                btn.classList.add('wrong');
+                buttons.forEach(b => {
+                    if (b.textContent === correct) {
+                        b.classList.add('correct');
+                    }
+                });
+                document.getElementById('message').textContent = '✗ 答錯了！';
+                document.getElementById('message').className = 'message wrong';
+            }
+
+            updateScore();
+            document.getElementById('nextBtn').style.display = 'inline-block';
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion >= totalQuestions) {
+                endGame();
+            } else {
+                showQuestion();
+            }
+        }
+
+        function endGame() {
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('endScreen').classList.add('active');
+            document.getElementById('finalScore').textContent = score;
+
+            let message = '';
+            if (score === 100) {
+                message = '🏆 太厲害了！滿分！';
+            } else if (score >= 80) {
+                message = '🎉 表現非常優秀！';
+            } else if (score >= 60) {
+                message = '👍 做得很不錯！';
+            } else if (score >= 40) {
+                message = '💪 繼續努力！';
+            } else {
+                message = '📚 再多練習一下吧！';
+            }
+            document.getElementById('resultMessage').textContent = message;
+        }
+    </script>
+</body>
+</html>
